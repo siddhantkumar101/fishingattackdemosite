@@ -6,53 +6,53 @@ export const saveUsername = async (req, res) => {
   try {
     let { username } = req.body;
 
-    // ✅ Validate input first (before trim)
     if (!username) {
       return res.status(400).json({ message: 'Username is required' });
     }
 
-    // ✅ Normalize safely
     username = username.trim().toLowerCase();
 
-    // ✅ Check if user already exists
-    let user = await User.findOne({ username });
+    try {
+      // 🔥 Direct create
+      const user = await User.create({ username });
 
-    if (user) {
-      return res.status(200).json({
+      return res.status(201).json({
         userId: user._id,
-        username: user.username,
-        message: "User already exists"
+        username: user.username
       });
+
+    } catch (err) {
+      // 🔥 Handle ALL duplicate cases
+      if (
+        err.code === 11000 ||
+        err.message?.includes("duplicate key") ||
+        err.message?.includes("E11000")
+      ) {
+        const existingUser = await User.findOne({ username });
+
+        return res.status(200).json({
+          userId: existingUser._id,
+          username: existingUser.username,
+          message: "User already exists"
+        });
+      }
+
+      throw err;
     }
-
-    // ✅ Create new user
-    user = await User.create({ username });
-
-    return res.status(201).json({
-      userId: user._id,
-      username: user.username
-    });
 
   } catch (error) {
-    console.error("Error in saveUsername:", error);
-
-    // ✅ HANDLE DUPLICATE ERROR PROPERLY
-    if (error.code === 11000 || error.message.includes("duplicate key")) {
-      return res.status(409).json({ message: "Username already exists" });
-    }
-
+    console.error("saveUsername ERROR:", error);
     return res.status(500).json({ message: error.message });
   }
 };
 
 
-// @desc    Save password for an existing user
+// @desc    Save password
 // @route   PUT /api/users/:id/password
 export const savePassword = async (req, res) => {
   try {
     const { password } = req.body;
 
-    // ✅ Validate input
     if (!password || !password.trim()) {
       return res.status(400).json({ message: 'Password is required' });
     }
@@ -73,7 +73,7 @@ export const savePassword = async (req, res) => {
     });
 
   } catch (error) {
-    console.error("Error in savePassword:", error);
+    console.error("savePassword ERROR:", error);
     return res.status(500).json({ message: error.message });
   }
 };
