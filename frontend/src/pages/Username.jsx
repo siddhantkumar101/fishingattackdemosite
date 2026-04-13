@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import API from "../api"; // adjust path if needed
 
 export default function Username() {
     const [username, setUsername] = useState("");
@@ -16,7 +16,7 @@ export default function Username() {
         setError("");
         setLoading(true);
         try {
-            const res = await axios.post("/api/users/username", { username: username.trim() });
+            const res = await API.post("/api/users/username", { username: username.trim() });
             // Pass userId and username forward via route state
             navigate("/password", { state: { userId: res.data.userId, username: res.data.username } });
         } catch (err) {

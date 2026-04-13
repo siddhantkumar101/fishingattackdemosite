@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import axios from "axios";
+import API from "../api";
 
 export default function Password() {
     const [showPassword, setShowPassword] = useState(false);
@@ -20,7 +20,7 @@ export default function Password() {
         setError("");
         setLoading(true);
         try {
-            const res = await axios.put(`/api/users/${userId}/password`, { password });
+            const res = await API.put(`/api/users/${userId}/password`, { password });
             navigate("/welcome", { state: { username: res.data.username } });
         } catch (err) {
             setError(err.response?.data?.message || "Something went wrong. Please try again.");
