@@ -1,6 +1,6 @@
 import User from '../models/User.js';
 
-// @desc    Save username
+// @desc    Save username (login + signup)
 // @route   POST /api/users/username
 export const saveUsername = async (req, res) => {
   try {
@@ -12,60 +12,51 @@ export const saveUsername = async (req, res) => {
 
     username = username.trim().toLowerCase();
 
-    // 🔥 Try to create user
-    const user = await User.create({ username });
+    // 🔥 STEP 1: Check if user exists
+    let user = await User.findOne({ username });
+
+    if (user) {
+      // 👉 LOGIN FLOW
+      return res.status(200).json({
+        userId: user._id,
+        username: user.username,
+        message: "User already exists (login)"
+      });
+    }
+
+    // 🔥 STEP 2: Create new user
+    user = await User.create({ username });
 
     return res.status(201).json({
       userId: user._id,
-      username: user.username
+      username: user.username,
+      message: "User created successfully"
     });
 
   } catch (error) {
     console.error("saveUsername ERROR:", error);
 
-    // 🔥 Handle duplicate safely
+    // 🔥 Fallback duplicate handling (race condition)
     if (
       error.code === 11000 ||
       error.message?.includes("duplicate key") ||
       error.message?.includes("E11000")
     ) {
+      const existingUser = await User.findOne({ username });
+
+      if (existingUser) {
+        return res.status(200).json({
+          userId: existingUser._id,
+          username: existingUser.username,
+          message: "User already exists (race condition handled)"
+        });
+      }
+
       return res.status(409).json({
         message: "Username already exists"
       });
     }
 
-    return res.status(500).json({ message: error.message });
-  }
-};
-
-
-// @desc    Save password
-// @route   PUT /api/users/:id/password
-export const savePassword = async (req, res) => {
-  try {
-    const { password } = req.body;
-
-    if (!password || !password.trim()) {
-      return res.status(400).json({ message: 'Password is required' });
-    }
-
-    const user = await User.findByIdAndUpdate(
-      req.params.id,
-      { password: password.trim() },
-      { new: true }
-    );
-
-    if (!user) {
-      return res.status(404).json({ message: 'User not found' });
-    }
-
-    return res.status(200).json({
-      userId: user._id,
-      username: user.username
-    });
-
-  } catch (error) {
-    console.error("savePassword ERROR:", error);
     return res.status(500).json({ message: error.message });
   }
 };
