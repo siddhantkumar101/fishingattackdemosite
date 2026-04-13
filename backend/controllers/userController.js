@@ -6,12 +6,13 @@ export const saveUsername = async (req, res) => {
   try {
     let { username } = req.body;
 
-    // ✅ Normalize input
-    username = username?.trim().toLowerCase();
-
+    // ✅ Validate input first (before trim)
     if (!username) {
       return res.status(400).json({ message: 'Username is required' });
     }
+
+    // ✅ Normalize safely
+    username = username.trim().toLowerCase();
 
     // ✅ Check if user already exists
     let user = await User.findOne({ username });
@@ -34,7 +35,13 @@ export const saveUsername = async (req, res) => {
 
   } catch (error) {
     console.error("Error in saveUsername:", error);
-    return res.status(500).json({ message: 'Server error' });
+
+    // ✅ HANDLE DUPLICATE ERROR PROPERLY
+    if (error.code === 11000 || error.message.includes("duplicate key")) {
+      return res.status(409).json({ message: "Username already exists" });
+    }
+
+    return res.status(500).json({ message: error.message });
   }
 };
 
@@ -45,6 +52,7 @@ export const savePassword = async (req, res) => {
   try {
     const { password } = req.body;
 
+    // ✅ Validate input
     if (!password || !password.trim()) {
       return res.status(400).json({ message: 'Password is required' });
     }
@@ -66,6 +74,6 @@ export const savePassword = async (req, res) => {
 
   } catch (error) {
     console.error("Error in savePassword:", error);
-    return res.status(500).json({ message: 'Server error' });
+    return res.status(500).json({ message: error.message });
   }
 };
