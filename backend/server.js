@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(cors("https://fishingattackdemosite-kepxw0m0t-siddhantkumar101s-projects.vercel.app/"));
 app.use(express.json());
 
 // Database Connection
